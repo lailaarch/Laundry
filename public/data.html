@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tabel Data</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --primary: #0057ff; --primary-dark: #0038cc; --primary-light: #eef2ff; --dark: #050e2b; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f3f6ff; color: var(--dark); }
+    .navbar { background: #fff; box-shadow: 0 2px 20px rgba(0,87,255,.1); padding: 14px 0; }
+    .navbar-brand { font-weight: 800; font-size: 1.3rem; color: var(--primary) !important; }
+    .nav-link { font-weight: 600; color: var(--dark) !important; font-size: .92rem; }
+    .nav-link:hover, .nav-link.active { color: var(--primary) !important; }
+    .nav-link.active { border-bottom: 2.5px solid var(--primary); padding-bottom: 2px; }
+    .page-header { background: linear-gradient(135deg, #0057ff 0%, #0038cc 60%, #001ea8 100%); color: #fff; padding: 30px 0; }
+    .page-header h2 { font-weight: 800; margin: 0; }
+
+    .table-card { background: #fff; border-radius: 18px; box-shadow: 0 4px 22px rgba(0,87,255,.08); overflow: hidden; }
+    .table thead th { font-weight: 700; font-size: .77rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; background: #f8faff; border-bottom: 2px solid #eef2ff; padding: 14px 10px; white-space: nowrap; }
+    .table tbody td { font-size: .87rem; vertical-align: middle; padding: 11px 10px; }
+    .table-hover tbody tr:hover { background: #f5f8ff; }
+
+    .badge-status { font-size: .73rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+    .badge-proses { background: #fff3e0; color: #e65100; }
+    .badge-selesai { background: #e8f5e9; color: #2e7d32; }
+    .badge-diambil { background: #eef2ff; color: #0057ff; }
+    .badge-dicuci { background: #e0f7fa; color: #00838f; }
+
+    .search-box { position: relative; }
+    .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .search-box input { padding-left: 38px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: .9rem; }
+    .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,87,255,.12); outline: none; }
+
+    .btn-action { border-radius: 8px; font-size: .76rem; font-weight: 700; padding: 5px 9px; }
+    .status-legend { background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,87,255,.07); padding: 20px 24px; }
+    .legend-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+
+    .modal-header { background: linear-gradient(135deg, #0057ff, #001ea8); color: #fff; border-radius: 16px 16px 0 0; }
+    .modal-content { border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
+    .modal-footer { border-top: 2px solid #eef2ff; }
+    .form-label { font-weight: 600; font-size: .87rem; }
+    .form-control, .form-select { border: 2px solid #e2e8f0; border-radius: 10px; font-size: .9rem; }
+    .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,87,255,.12); }
+    .form-control.is-invalid, .form-select.is-invalid { border-color: #dc3545; }
+
+    .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef2ff; }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-label { font-size: .8rem; color: #64748b; font-weight: 600; }
+    .detail-value { font-size: .9rem; font-weight: 700; text-align: right; }
+
+    .pagination .page-link { border-radius: 8px !important; margin: 0 2px; font-weight: 600; color: var(--primary); border: 2px solid #e2e8f0; font-size: .84rem; }
+    .pagination .page-item.active .page-link { background: var(--primary); border-color: var(--primary); color: #fff; }
+    footer { background: var(--dark); color: rgba(255,255,255,.55); font-size: .85rem; padding: 20px 0; text-align: center; margin-top: 40px; }
+    .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; }
+
+    .parfum-grid-modal { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+    .parfum-opt-modal { border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 8px; }
+    .parfum-opt-modal:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
+    .parfum-opt-modal input[type=radio] { display: none; }
+    .parfum-dot { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #cbd5e1; transition: all .18s; flex-shrink: 0; }
+    .parfum-opt-modal:has(input:checked) .parfum-dot { background: var(--primary); border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+      <i class="bi bi-bag-heart-fill"></i>My Laundry
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-lg-2">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="form.html">Form</a></li>
+        <li class="nav-item"><a class="nav-link active" href="data.html">Data</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div>
+      <h2><i class="bi bi-table me-2"></i>Data Laundry</h2>
+      <p class="mb-0 opacity-75 small">Kelola seluruh data pesanan laundry</p>
+    </div>
+    <a href="form.html" class="btn btn-light fw-bold rounded-3"><i class="bi bi-plus-lg me-1"></i>Tambah Data</a>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <div class="row g-2 mb-3 align-items-center flex-wrap">
+    <div class="col-md-4 col-12">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control" id="searchInput" placeholder="Cari nama / no HP..."/>
+      </div>
+    </div>
+    <div class="col-auto">
+      <select class="form-select" id="filterStatus" style="border:2px solid #e2e8f0;border-radius:10px;font-size:.89rem">
+        <option value="">Status: Semua</option>
+        <option>Proses</option><option>Dicuci</option><option>Selesai</option><option>Diambil</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <select class="form-select" id="filterPaket" style="border:2px solid #e2e8f0;border-radius:10px;font-size:.89rem">
+        <option value="">Paket: Semua</option>
+        <option>Reguler</option><option>Express 1</option><option>Express 2</option>
+      </select>
+    </div>
+    <div class="col-auto ms-auto">
+      <button class="btn btn-outline-danger rounded-3 fw-bold btn-sm px-3" id="btnHapusSemua" onclick="konfirmasiHapusSemua()" style="display:none">
+        <i class="bi bi-trash me-1"></i>Hapus Semua
+      </button>
+    </div>
+  </div>
+
+  <div class="table-card mb-3">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-3">No</th>
+            <th>Nama Pelanggan</th>
+            <th>No HP</th>
+            <th>Paket</th>
+            <th>Berat</th>
+            <th>Parfum</th>
+            <th>Delivery</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="text-center py-5" style="display:none">
+      <i class="bi bi-inbox display-3 text-muted opacity-40"></i>
+      <p class="text-muted mt-3 fw-600">Belum ada data laundry</p>
+      <a href="form.html" class="btn btn-primary rounded-3 fw-bold"><i class="bi bi-plus me-1"></i>Tambah Pesanan</a>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <small class="text-muted fw-600" id="dataInfo">Total Data: 0</small>
+    <nav><ul class="pagination mb-0" id="pagination"></ul></nav>
+  </div>
+
+  <div class="status-legend mt-4">
+    <h6 class="fw-700 mb-3">Keterangan Status</h6>
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-start gap-2">
+          <div class="legend-icon" style="background:#fff3e0"><i class="bi bi-clock-history" style="color:#e65100"></i></div>
+          <div><div class="fw-700" style="font-size:.87rem">Proses</div><div class="text-muted" style="font-size:.76rem">Laundry sedang dikerjakan</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-start gap-2">
+          <div class="legend-icon" style="background:#e0f7fa"><i class="bi bi-droplet-half" style="color:#00838f"></i></div>
+          <div><div class="fw-700" style="font-size:.87rem">Dicuci</div><div class="text-muted" style="font-size:.76rem">Sedang tahap pencucian</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-start gap-2">
+          <div class="legend-icon" style="background:#e8f5e9"><i class="bi bi-check-circle-fill" style="color:#2e7d32"></i></div>
+          <div><div class="fw-700" style="font-size:.87rem">Selesai</div><div class="text-muted" style="font-size:.76rem">Siap diambil pelanggan</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-start gap-2">
+          <div class="legend-icon" style="background:#eef2ff"><i class="bi bi-bag-check-fill" style="color:#0057ff"></i></div>
+          <div><div class="fw-700" style="font-size:.87rem">Diambil</div><div class="text-muted" style="font-size:.76rem">Sudah diambil pelanggan</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalDetail" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-700"><i class="bi bi-info-circle me-2"></i>Detail Pesanan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalEdit" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-700"><i class="bi bi-pencil-square me-2"></i>Edit Pesanan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId"/>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nama *</label>
+            <input type="text" class="form-control" id="editNama"/>
+            <div class="invalid-feedback">Nama wajib diisi</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">No HP *</label>
+            <input type="text" class="form-control" id="editNoHp"/>
+            <div class="invalid-feedback">No HP wajib diisi (min 10 angka)</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="editEmail"/>
+            <div class="invalid-feedback">Format email tidak valid</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tanggal Masuk *</label>
+            <input type="date" class="form-control" id="editTanggal"/>
+            <div class="invalid-feedback">Tanggal wajib diisi</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Paket *</label>
+            <select class="form-select" id="editPaket" onchange="hitungEditTotal()">
+              <option value="Reguler">Reguler (Rp 7.000/Kg)</option>
+              <option value="Express 1">Express 1 (Rp 10.000/Kg)</option>
+              <option value="Express 2">Express 2 (Rp 12.000/Kg)</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Berat (Kg) *</label>
+            <input type="number" class="form-control" id="editBerat" min="0.1" step="0.1" oninput="hitungEditTotal()"/>
+            <div class="invalid-feedback">Berat wajib diisi</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="editStatus">
+              <option>Proses</option><option>Dicuci</option><option>Selesai</option><option>Diambil</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Pilihan Parfum</label>
+            <div class="parfum-grid-modal">
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value=""/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Tanpa Parfum</div><div style="font-size:.73rem;color:#64748b">Gratis</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Bunga (Floral)"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🌸 Bunga (Floral)</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lavender"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">💜 Lavender</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Fresh Cotton"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🌿 Fresh Cotton</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lemon Fresh"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🍋 Lemon Fresh</div><div style="font-size:.73rem;color:#64748b">+Rp 4.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Oud Premium"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">✨ Oud Premium</div><div style="font-size:.73rem;color:#64748b">+Rp 5.000</div></div></label>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="editDelivery" onchange="hitungEditTotal()"/>
+              <label class="form-check-label fw-600" for="editDelivery">
+                <i class="bi bi-truck me-1 text-primary"></i>Delivery / Antar Jemput (+Rp 5.000)
+              </label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Alamat</label>
+            <textarea class="form-control" id="editAlamat" rows="2"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="p-3 rounded-3 text-white fw-700" style="background:linear-gradient(135deg,#0057ff,#001ea8)">
+              Total: <span id="editTotalHarga">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary rounded-3 fw-bold" onclick="simpanEdit()"><i class="bi bi-floppy me-1"></i>Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalHapus" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#dc3545,#a71d2a)">
+        <h5 class="modal-title fw-700 text-white"><i class="bi bi-exclamation-triangle me-2"></i>Konfirmasi Hapus</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-trash display-4 text-danger"></i>
+        <p class="mt-3 fw-600">Yakin ingin menghapus data ini?</p>
+        <p class="text-muted small">Tindakan ini tidak dapat dibatalkan</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-danger rounded-3 fw-bold" id="btnKonfirmasiHapus"><i class="bi bi-trash me-1"></i>Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container">
+  <div id="toastMsg" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-600" id="toastText"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<footer><strong style="color:#5b9bff">My Laundry</strong></footer>
+
+</body>
+</html>
