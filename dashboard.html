@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --primary: #0057ff; --primary-dark: #0038cc; --primary-light: #eef2ff; --dark: #050e2b; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f3f6ff; color: var(--dark); }
+    .navbar { background: #fff; box-shadow: 0 2px 20px rgba(0,87,255,.1); padding: 14px 0; }
+    .navbar-brand { font-weight: 800; font-size: 1.3rem; color: var(--primary) !important; }
+    .nav-link { font-weight: 600; color: var(--dark) !important; font-size: .92rem; }
+    .nav-link:hover, .nav-link.active { color: var(--primary) !important; }
+    .nav-link.active { border-bottom: 2.5px solid var(--primary); padding-bottom: 2px; }
+    .page-header { background: linear-gradient(135deg, #0057ff 0%, #0038cc 60%, #001ea8 100%); color: #fff; padding: 30px 0; }
+    .page-header h2 { font-weight: 800; margin: 0; }
+
+    .stat-card { background: #fff; border: none; border-radius: 18px; box-shadow: 0 4px 22px rgba(0,87,255,.08); padding: 24px; transition: transform .2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card .num { font-size: 2.3rem; font-weight: 800; }
+    .stat-card .lbl { font-size: .78rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+    .stat-card .icon-wrap { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+
+    .badge-status { font-size: .75rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; }
+    .badge-proses { background: #fff3e0; color: #e65100; }
+    .badge-selesai { background: #28a732; color: #2e7d32; }
+    .badge-diambil { background: #eef2ff; color: #0057ff; }
+    .badge-dicuci { background: #e0f7fa; color: #00838f; }
+
+    .table-card { background: #fff; border-radius: 18px; box-shadow: 0 4px 22px rgba(0,87,255,.08); overflow: hidden; }
+    .table-card .ch { background: #fff; border-bottom: 2px solid #eef2ff; padding: 20px 24px; }
+    .table-card .ch h5 { font-weight: 700; margin: 0; }
+    .table thead th { font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; background: #f8faff; border: none; padding: 14px 12px; }
+    .table tbody td { font-size: .89rem; vertical-align: middle; padding: 12px 12px; }
+
+    footer { background: var(--dark); color: rgba(255,255,255,.55); font-size: .85rem; padding: 20px 0; text-align: center; margin-top: 40px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+      <i class="bi bi-bag-heart-fill"></i> LaundryKu
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto gap-lg-2">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="form.html">Form</a></li>
+        <li class="nav-item"><a class="nav-link" href="data.html">Data</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div>
+      <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+      <p class="mb-0 opacity-75 small">Ringkasan data laundry Anda</p>
+    </div>
+    <a href="form.html" class="btn btn-light fw-bold rounded-3"><i class="bi bi-plus-lg me-1"></i>Tambah Pesanan</a>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="icon-wrap" style="background:#eef2ff"><i class="bi bi-box-seam text-primary"></i></div>
+        </div>
+        <div class="num text-primary" id="totalPesanan">0</div>
+        <div class="lbl">Total Pesanan</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="icon-wrap" style="background:#e8f5e9"><i class="bi bi-people-fill text-success"></i></div>
+        </div>
+        <div class="num text-success" id="totalPelanggan">0</div>
+        <div class="lbl">Total Pelanggan</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="icon-wrap" style="background:#fff8e1"><i class="bi bi-arrow-clockwise text-warning"></i></div>
+        </div>
+        <div class="num text-warning" id="pesananProses">0</div>
+        <div class="lbl">Sedang Proses</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="icon-wrap" style="background:#e8f5e9"><i class="bi bi-check-circle-fill text-success"></i></div>
+        </div>
+        <div class="num text-success" id="pesananSelesai">0</div>
+        <div class="lbl">Selesai</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-5">
+      <div class="stat-card h-100 text-center" style="background:linear-gradient(135deg,#0057ff,#001ea8)">
+        <div class="mb-2" style="font-size:2rem;color:#fff"><i class="bi bi-cash-coin"></i></div>
+        <div style="font-size:1.6rem;font-weight:800;color:#fff" id="totalRevenue">Rp 0</div>
+        <div style="font-size:.78rem;color:rgba(255,255,255,.7);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Total Pendapatan</div>
+        <hr style="border-color:rgba(255,255,255,.2)">
+        <div class="d-flex justify-content-around">
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:#fff" id="totalDelivery">0</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.65);font-weight:600">Delivery</div>
+          </div>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;color:#fff" id="totalParfum">0</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.65);font-weight:600">Pakai Parfum</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7">
+      <div class="stat-card h-100">
+        <h6 class="fw-700 mb-3">Distribusi Status</h6>
+        <div id="statusBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="ch d-flex align-items-center justify-content-between">
+      <h5><i class="bi bi-clock-history me-2 text-primary"></i>Pesanan Terbaru</h5>
+      <a href="data.html" class="btn btn-sm btn-outline-primary rounded-3 fw-bold">Lihat Semua Data</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4">No</th>
+            <th>Nama</th>
+            <th>Paket</th>
+            <th>Berat</th>
+            <th>Parfum</th>
+            <th>Delivery</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="recentTable">
+          <tr><td colspan="8" class="text-center py-5 text-muted">Belum ada data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer><strong style="color:#5b9bff">My Laundry</strong></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
