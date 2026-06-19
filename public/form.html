@@ -1,13 +1,34 @@
 <!DOCTYPE html>
+<!--
+  ============================================================
+  FILE: form.html
+  DESKRIPSI: Halaman form input pesanan laundry
+  FITUR:
+    - Input data pelanggan (nama, email, no HP, tanggal, alamat)
+    - Pilihan paket laundry (Reguler / Express 1 / Express 2)
+    - Pilihan parfum opsional (6 aroma)
+    - Toggle layanan delivery dengan field tambahan
+    - Kalkulasi total harga otomatis (real-time)
+    - Validasi form sebelum simpan
+    - Simpan data ke localStorage
+    - Toast notifikasi sukses
+  FITUR KREATIF: localStorage untuk penyimpanan persisten data pesanan
+  AUTHOR: Mahasiswa
+  ============================================================
+-->
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Form Pelanggan</title>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
+    /* ===== CSS VARIABLES ===== */
     :root {
       --primary: #0057ff;
       --primary-dark: #0038cc;
@@ -23,25 +44,32 @@
     .page-header { background: linear-gradient(135deg, #0057ff 0%, #0038cc 60%, #001ea8 100%); color: #fff; padding: 30px 0; }
     .page-header h2 { font-weight: 800; margin: 0; }
 
+    /* ===== FORM CARD: Wadah utama form ===== */
     .form-card { background: #fff; border-radius: 20px; box-shadow: 0 6px 32px rgba(0,87,255,.09); padding: 36px; }
     .form-label { font-weight: 600; font-size: .88rem; color: #374151; }
     .form-control, .form-select { border: 2px solid #e2e8f0; border-radius: 10px; font-size: .92rem; padding: 10px 14px; transition: border-color .2s, box-shadow .2s; }
     .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,87,255,.13); }
+    /* State validasi merah saat error */
     .form-control.is-invalid, .form-select.is-invalid { border-color: #dc3545; }
     .invalid-feedback { font-size: .79rem; font-weight: 600; }
     .section-divider { border: none; border-top: 2px dashed #e2e8f0; margin: 26px 0; }
+    /* Label seksi berwarna biru untuk memisahkan bagian form */
     .section-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .11em; color: var(--primary); background: var(--primary-light); padding: 6px 14px; border-radius: 8px; display: inline-block; margin-bottom: 18px; }
 
+    /* ===== PAKET GRID: Pilihan paket laundry ===== */
     .paket-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
     .paket-option { border: 2.5px solid #e2e8f0; border-radius: 14px; padding: 14px 12px; cursor: pointer; transition: all .2s; position: relative; }
+    /* Highlight saat dipilih menggunakan :has() selector CSS modern */
     .paket-option:has(input:checked) { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 0 0 3px rgba(0,87,255,.1); }
-    .paket-option input[type=radio] { display: none; }
+    .paket-option input[type=radio] { display: none; } /* Sembunyikan radio asli */
     .paket-name { font-weight: 700; font-size: .88rem; }
     .paket-price { font-size: .8rem; color: var(--primary); font-weight: 700; margin-top: 3px; }
     .paket-desc { font-size: .71rem; color: #64748b; margin-top: 3px; }
+    /* Ikon centang pojok kanan atas paket yang dipilih */
     .paket-check { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: .6rem; color: transparent; transition: all .2s; }
     .paket-option:has(input:checked) .paket-check { background: var(--primary); color: #fff; }
 
+    /* ===== PARFUM GRID: Pilihan aroma parfum ===== */
     .parfum-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
     .parfum-opt { border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 10px; }
     .parfum-opt:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
@@ -51,28 +79,34 @@
     .parfum-name { font-size: .86rem; font-weight: 700; }
     .parfum-price { font-size: .75rem; color: #64748b; }
 
+    /* ===== DELIVERY TOGGLE: Toggle layanan antar jemput ===== */
     .delivery-toggle { border: 2.5px solid #e2e8f0; border-radius: 14px; padding: 14px 18px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 14px; }
     .delivery-toggle:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
     .delivery-toggle input { display: none; }
     .delivery-icon { width: 42px; height: 42px; border-radius: 12px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--primary); flex-shrink: 0; transition: all .2s; }
     .delivery-toggle:has(input:checked) .delivery-icon { background: var(--primary); color: #fff; }
 
+    /* ===== TOTAL BOX: Tampilan total harga ===== */
     .total-box { background: linear-gradient(135deg, #0057ff, #0038cc); color: #fff; border-radius: 16px; padding: 22px 26px; }
     .total-box .lbl { font-size: .78rem; opacity: .8; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
     .total-box .amount { font-size: 2rem; font-weight: 800; }
     .total-box .detail { font-size: .78rem; opacity: .7; margin-top: 4px; }
 
+    /* ===== BUTTON SIMPAN ===== */
     .btn-save { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border: none; border-radius: 12px; padding: 13px 32px; font-weight: 700; font-size: .95rem; box-shadow: 0 6px 22px rgba(0,87,255,.3); transition: transform .15s, box-shadow .2s; }
     .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,87,255,.4); color: #fff; }
 
     footer { background: var(--dark); color: rgba(255,255,255,.55); font-size: .85rem; padding: 20px 0; text-align: center; margin-top: 50px; }
+    /* Toast notifikasi di pojok kanan atas */
     .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; }
 
+    /* ===== RESPONSIF: Penyesuaian untuk layar mobile ===== */
     @media(max-width:576px) { .paket-grid { grid-template-columns: 1fr 1fr; } .parfum-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
 
+<!-- ===== NAVBAR ===== -->
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
@@ -93,6 +127,7 @@
   </div>
 </nav>
 
+<!-- ===== PAGE HEADER ===== -->
 <div class="page-header">
   <div class="container">
     <h2><i class="bi bi-clipboard-plus me-2"></i>Form Input Laundry</h2>
@@ -105,28 +140,34 @@
     <div class="col-lg-8">
       <div class="form-card">
 
+        <!-- BAGIAN 1: Data Pelanggan -->
         <span class="section-label"><i class="bi bi-person me-1"></i>Data Pelanggan</span>
         <div class="row g-3">
+          <!-- Nama wajib diisi -->
           <div class="col-md-6">
             <label class="form-label">Nama Pelanggan <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="nama" placeholder="Nama lengkap"/>
             <div class="invalid-feedback">Nama pelanggan wajib diisi</div>
           </div>
+          <!-- Email opsional, divalidasi format jika diisi -->
           <div class="col-md-6">
             <label class="form-label">Email</label>
             <input type="email" class="form-control" id="email" placeholder="email@contoh.com"/>
             <div class="invalid-feedback">Format email tidak valid</div>
           </div>
+          <!-- No HP wajib, minimal 10 digit -->
           <div class="col-md-6">
             <label class="form-label">Nomor HP <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="noHp" placeholder="08xx-xxxx-xxxx"/>
             <div class="invalid-feedback">No HP wajib diisi (min 10 angka)</div>
           </div>
+          <!-- Tanggal masuk, default hari ini -->
           <div class="col-md-6">
             <label class="form-label">Tanggal Masuk <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="tanggal"/>
             <div class="invalid-feedback">Tanggal masuk wajib diisi</div>
           </div>
+          <!-- Alamat opsional -->
           <div class="col-12">
             <label class="form-label">Alamat</label>
             <textarea class="form-control" id="alamat" rows="2" placeholder="Alamat lengkap pelanggan..."></textarea>
@@ -135,13 +176,16 @@
 
         <hr class="section-divider">
 
+        <!-- BAGIAN 2: Detail Laundry -->
         <span class="section-label"><i class="bi bi-basket me-1"></i>Detail Laundry</span>
         <div class="row g-3">
+          <!-- Berat cucian: trigger hitungTotal() setiap perubahan -->
           <div class="col-md-6">
             <label class="form-label">Berat Cucian (Kg) <span class="text-danger">*</span></label>
             <input type="number" class="form-control" id="berat" placeholder="Contoh: 3" min="0.1" step="0.1" oninput="hitungTotal()"/>
             <div class="invalid-feedback">Berat cucian wajib diisi (min 0.1 Kg)</div>
           </div>
+          <!-- Status awal pesanan -->
           <div class="col-md-6">
             <label class="form-label">Status</label>
             <select class="form-select" id="status">
@@ -151,93 +195,83 @@
               <option value="Diambil">Diambil</option>
             </select>
           </div>
-        </div>
 
-        <div class="mt-3">
-          <label class="form-label d-block mb-2">Pilih Paket <span class="text-danger">*</span></label>
-          <div class="paket-grid">
-            <label class="paket-option">
-              <input type="radio" name="paket" value="Reguler" checked onchange="hitungTotal()"/>
-              <div class="paket-check"><i class="bi bi-check"></i></div>
-              <div class="paket-name">Reguler</div>
-              <div class="paket-price">Rp 7.000/Kg</div>
-              <div class="paket-desc">Cuci + kering, 1–3 hari</div>
-            </label>
-            <label class="paket-option">
-              <input type="radio" name="paket" value="Express 1" onchange="hitungTotal()"/>
-              <div class="paket-check"><i class="bi bi-check"></i></div>
-              <div class="paket-name">Express 1</div>
-              <div class="paket-price">Rp 10.000/Kg</div>
-              <div class="paket-desc">Cuci + setrika, 12 jam</div>
-            </label>
-            <label class="paket-option">
-              <input type="radio" name="paket" value="Express 2" onchange="hitungTotal()"/>
-              <div class="paket-check"><i class="bi bi-check"></i></div>
-              <div class="paket-name">Express 2</div>
-              <div class="paket-price">Rp 12.000/Kg</div>
-              <div class="paket-desc">Cuci + setrika, 6 jam</div>
-            </label>
+          <!-- Pilihan Paket: card radio button custom -->
+          <div class="col-12">
+            <label class="form-label d-block mb-2">Pilih Paket <span class="text-danger">*</span></label>
+            <div class="paket-grid">
+              <!-- Paket Reguler (default terpilih) -->
+              <label class="paket-option">
+                <input type="radio" name="paket" value="Reguler" checked onchange="hitungTotal()"/>
+                <div class="paket-check"><i class="bi bi-check"></i></div>
+                <div class="paket-name">Reguler</div>
+                <div class="paket-price">Rp 7.000/Kg</div>
+                <div class="paket-desc">Cuci + kering, 1–3 hari</div>
+              </label>
+              <!-- Paket Express 1 -->
+              <label class="paket-option">
+                <input type="radio" name="paket" value="Express 1" onchange="hitungTotal()"/>
+                <div class="paket-check"><i class="bi bi-check"></i></div>
+                <div class="paket-name">Express 1</div>
+                <div class="paket-price">Rp 10.000/Kg</div>
+                <div class="paket-desc">Cuci + setrika, 12 jam</div>
+              </label>
+              <!-- Paket Express 2 -->
+              <label class="paket-option">
+                <input type="radio" name="paket" value="Express 2" onchange="hitungTotal()"/>
+                <div class="paket-check"><i class="bi bi-check"></i></div>
+                <div class="paket-name">Express 2</div>
+                <div class="paket-price">Rp 12.000/Kg</div>
+                <div class="paket-desc">Cuci + setrika, 6 jam</div>
+              </label>
+            </div>
           </div>
         </div>
 
         <hr class="section-divider">
 
+        <!-- BAGIAN 3: Pilihan Parfum (Opsional) -->
         <span class="section-label"><i class="bi bi-flower1 me-1"></i>Pilihan Parfum</span>
         <p class="text-muted small mb-3">Opsional — pilih aroma wewangian untuk pakaian</p>
         <div class="parfum-grid">
+          <!-- Tanpa Parfum (default) -->
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="" checked onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name">Tanpa Parfum</div>
-              <div class="parfum-price">Gratis</div>
-            </div>
+            <div><div class="parfum-name">Tanpa Parfum</div><div class="parfum-price">Gratis</div></div>
           </label>
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="Bunga (Floral)" onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name"> Bunga (Floral)</div>
-              <div class="parfum-price">+Rp 3.000</div>
-            </div>
+            <div><div class="parfum-name">Bunga (Floral)</div><div class="parfum-price">+Rp 3.000</div></div>
           </label>
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="Lavender" onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name"> Lavender</div>
-              <div class="parfum-price">+Rp 3.000</div>
-            </div>
+            <div><div class="parfum-name">Lavender</div><div class="parfum-price">+Rp 3.000</div></div>
           </label>
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="Fresh Cotton" onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name"> Fresh Cotton</div>
-              <div class="parfum-price">+Rp 3.000</div>
-            </div>
+            <div><div class="parfum-name">Fresh Cotton</div><div class="parfum-price">+Rp 3.000</div></div>
           </label>
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="Lemon Fresh" onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name"> Lemon Fresh</div>
-              <div class="parfum-price">+Rp 4.000</div>
-            </div>
+            <div><div class="parfum-name">Lemon Fresh</div><div class="parfum-price">+Rp 4.000</div></div>
           </label>
           <label class="parfum-opt">
             <input type="radio" name="parfum" value="Oud Premium" onchange="hitungTotal()"/>
             <div class="parfum-dot"></div>
-            <div>
-              <div class="parfum-name"> Oud Premium</div>
-              <div class="parfum-price">+Rp 5.000</div>
-            </div>
+            <div><div class="parfum-name">Oud Premium</div><div class="parfum-price">+Rp 5.000</div></div>
           </label>
         </div>
 
         <hr class="section-divider">
 
+        <!-- BAGIAN 4: Layanan Delivery (Toggle) -->
         <span class="section-label"><i class="bi bi-truck me-1"></i>Layanan Delivery</span>
+        <!-- Checkbox tersembunyi, tampilan menggunakan CSS :has() -->
         <label class="delivery-toggle w-100 mb-2">
           <input type="checkbox" id="delivery" onchange="toggleDelivery(); hitungTotal()"/>
           <div class="delivery-icon"><i class="bi bi-truck"></i></div>
@@ -248,6 +282,7 @@
           <span class="badge bg-primary ms-auto" style="font-size:.72rem">+Rp 5.000</span>
         </label>
 
+        <!-- Field tambahan delivery (tersembunyi, muncul saat delivery dicentang) -->
         <div id="deliveryFields" style="display:none" class="mt-3">
           <div class="row g-3">
             <div class="col-md-6">
@@ -263,12 +298,14 @@
 
         <hr class="section-divider">
 
+        <!-- TOTAL HARGA: Diperbarui otomatis oleh hitungTotal() -->
         <div class="total-box mb-4">
           <div class="lbl"><i class="bi bi-calculator me-1"></i>Total Harga</div>
           <div class="amount" id="totalHarga">Rp 0</div>
           <div class="detail" id="detailHarga">—</div>
         </div>
 
+        <!-- Tombol Reset dan Simpan -->
         <div class="d-flex gap-3 justify-content-end">
           <button type="button" class="btn btn-outline-secondary rounded-3 px-4 fw-bold" onclick="resetForm()">
             <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
@@ -283,6 +320,7 @@
   </div>
 </div>
 
+<!-- Toast notifikasi sukses simpan data -->
 <div class="toast-container">
   <div id="toastSukses" class="toast align-items-center text-bg-success border-0" role="alert">
     <div class="d-flex">
@@ -294,5 +332,125 @@
 
 <footer><strong style="color:#5b9bff">My Laundry</strong></footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+  /*
+   * KONSTANTA HARGA
+   * Digunakan untuk kalkulasi total harga secara real-time
+   */
+  const HARGA_PAKET = { 'Reguler': 7000, 'Express 1': 10000, 'Express 2': 12000 };
+  const HARGA_PARFUM = { '': 0, 'Bunga (Floral)': 3000, 'Lavender': 3000, 'Fresh Cotton': 3000, 'Lemon Fresh': 4000, 'Oud Premium': 5000 };
+  const HARGA_DELIVERY = 5000;
+
+  // Set default tanggal hari ini
+  document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
+
+  /*
+   * FUNGSI: fmt(n) — Format angka ke Rupiah
+   */
+  function fmt(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
+  /*
+   * FUNGSI: hitungTotal()
+   * Menghitung total harga berdasarkan berat, paket, parfum, dan delivery
+   * Dipanggil setiap kali ada perubahan input
+   */
+  function hitungTotal() {
+    const berat = parseFloat($('#berat').val()) || 0;
+    const paket = $('input[name="paket"]:checked').val() || 'Reguler';
+    const parfum = $('input[name="parfum"]:checked').val() || '';
+    const delivery = $('#delivery').is(':checked');
+
+    const hPaket = HARGA_PAKET[paket] || 7000;
+    const hParfum = HARGA_PARFUM[parfum] || 0;
+    const hDelivery = delivery ? HARGA_DELIVERY : 0;
+    const subtotal = berat * hPaket;
+    const total = subtotal + hParfum + hDelivery;
+
+    // Perbarui tampilan total dan detail rincian
+    $('#totalHarga').text(fmt(total));
+    let detail = berat > 0 ? `${berat} Kg × ${fmt(hPaket)}` : '—';
+    if (hParfum > 0) detail += ` + parfum ${fmt(hParfum)}`;
+    if (delivery) detail += ` + delivery ${fmt(HARGA_DELIVERY)}`;
+    $('#detailHarga').text(berat > 0 ? detail : '—');
+    return total;
+  }
+
+  /*
+   * FUNGSI: toggleDelivery()
+   * Menampilkan/menyembunyikan field waktu jemput & catatan driver
+   */
+  function toggleDelivery() {
+    const on = $('#delivery').is(':checked');
+    $('#deliveryFields').toggle(on);
+  }
+
+  /*
+   * FUNGSI: validateForm()
+   * Memvalidasi semua field wajib sebelum data disimpan
+   * Menandai field yang tidak valid dengan kelas 'is-invalid'
+   * Return: true jika semua valid, false jika ada yang gagal
+   */
+  function validateForm() {
+    let ok = true;
+    $('.form-control, .form-select').removeClass('is-invalid');
+    const nama = $('#nama').val().trim();
+    if (!nama) { $('#nama').addClass('is-invalid'); ok = false; }
+    const email = $('#email').val().trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('#email').addClass('is-invalid'); ok = false; }
+    if ($('#noHp').val().replace(/\D/g,'').length < 10) { $('#noHp').addClass('is-invalid'); ok = false; }
+    if (!$('#tanggal').val()) { $('#tanggal').addClass('is-invalid'); ok = false; }
+    const berat = parseFloat($('#berat').val());
+    if (!berat || berat < 0.1) { $('#berat').addClass('is-invalid'); ok = false; }
+    return ok;
+  }
+
+  /*
+   * FUNGSI: simpanData()
+   * Menyimpan data pesanan ke localStorage sebagai array JSON
+   * Menggunakan Date.now() sebagai ID unik setiap pesanan
+   */
+  function simpanData() {
+    if (!validateForm()) return; // Hentikan jika validasi gagal
+    const data = JSON.parse(localStorage.getItem('laundryData') || '[]');
+    data.push({
+      id: Date.now(), // ID unik berbasis timestamp
+      nama: $('#nama').val().trim(),
+      email: $('#email').val().trim(),
+      noHp: $('#noHp').val().trim(),
+      tanggal: $('#tanggal').val(),
+      berat: parseFloat($('#berat').val()),
+      paket: $('input[name="paket"]:checked').val(),
+      parfum: $('input[name="parfum"]:checked').val() || '',
+      delivery: $('#delivery').is(':checked'),
+      waktuJemput: $('#waktuJemput').val() || '',
+      catatanDriver: $('#catatanDriver').val().trim(),
+      alamat: $('#alamat').val().trim(),
+      status: $('#status').val(),
+      total: hitungTotal()
+    });
+    localStorage.setItem('laundryData', JSON.stringify(data)); // Simpan ke localStorage
+    new bootstrap.Toast(document.getElementById('toastSukses')).show(); // Tampilkan toast
+    setTimeout(() => resetForm(), 1500); // Reset form setelah 1.5 detik
+  }
+
+  /*
+   * FUNGSI: resetForm()
+   * Mengosongkan semua field dan mengembalikan ke nilai default
+   */
+  function resetForm() {
+    $('#nama, #email, #noHp, #alamat, #waktuJemput, #catatanDriver').val('');
+    $('#tanggal').val(new Date().toISOString().split('T')[0]);
+    $('#berat').val('');
+    $('input[name="paket"][value="Reguler"]').prop('checked', true);
+    $('input[name="parfum"][value=""]').prop('checked', true);
+    $('#delivery').prop('checked', false);
+    $('#deliveryFields').hide();
+    $('#status').val('Proses');
+    $('.form-control, .form-select').removeClass('is-invalid');
+    hitungTotal();
+  }
+</script>
 </body>
 </html>

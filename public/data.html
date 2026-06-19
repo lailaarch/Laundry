@@ -1,13 +1,33 @@
 <!DOCTYPE html>
+<!--
+  ============================================================
+  FILE: data.html
+  DESKRIPSI: Halaman tabel data pesanan laundry dengan manajemen CRUD
+  FITUR:
+    - Tabel data dengan pagination (8 data per halaman)
+    - Filter pencarian, status, dan paket
+    - Modal Detail pesanan
+    - Modal Edit pesanan (dengan kalkulasi ulang total)
+    - Modal Konfirmasi Hapus
+    - Hapus semua data
+    - Toast notifikasi untuk aksi
+  FITUR KREATIF: localStorage + full CRUD (Create/Read/Update/Delete)
+  AUTHOR: Mahasiswa
+  ============================================================
+-->
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tabel Data</title>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
+    /* ===== CSS VARIABLES ===== */
     :root { --primary: #0057ff; --primary-dark: #0038cc; --primary-light: #eef2ff; --dark: #050e2b; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f3f6ff; color: var(--dark); }
     .navbar { background: #fff; box-shadow: 0 2px 20px rgba(0,87,255,.1); padding: 14px 0; }
@@ -18,26 +38,33 @@
     .page-header { background: linear-gradient(135deg, #0057ff 0%, #0038cc 60%, #001ea8 100%); color: #fff; padding: 30px 0; }
     .page-header h2 { font-weight: 800; margin: 0; }
 
+    /* ===== TABLE CARD ===== */
     .table-card { background: #fff; border-radius: 18px; box-shadow: 0 4px 22px rgba(0,87,255,.08); overflow: hidden; }
     .table thead th { font-weight: 700; font-size: .77rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; background: #f8faff; border-bottom: 2px solid #eef2ff; padding: 14px 10px; white-space: nowrap; }
     .table tbody td { font-size: .87rem; vertical-align: middle; padding: 11px 10px; }
     .table-hover tbody tr:hover { background: #f5f8ff; }
 
+    /* ===== BADGE STATUS ===== */
     .badge-status { font-size: .73rem; padding: 5px 12px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
     .badge-proses { background: #fff3e0; color: #e65100; }
     .badge-selesai { background: #e8f5e9; color: #2e7d32; }
     .badge-diambil { background: #eef2ff; color: #0057ff; }
     .badge-dicuci { background: #e0f7fa; color: #00838f; }
 
+    /* ===== SEARCH BOX ===== */
     .search-box { position: relative; }
     .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
     .search-box input { padding-left: 38px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: .9rem; }
     .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,87,255,.12); outline: none; }
 
+    /* ===== ACTION BUTTONS ===== */
     .btn-action { border-radius: 8px; font-size: .76rem; font-weight: 700; padding: 5px 9px; }
+
+    /* ===== STATUS LEGEND ===== */
     .status-legend { background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,87,255,.07); padding: 20px 24px; }
     .legend-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
 
+    /* ===== MODAL STYLES ===== */
     .modal-header { background: linear-gradient(135deg, #0057ff, #001ea8); color: #fff; border-radius: 16px 16px 0 0; }
     .modal-content { border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
     .modal-footer { border-top: 2px solid #eef2ff; }
@@ -46,16 +73,21 @@
     .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,87,255,.12); }
     .form-control.is-invalid, .form-select.is-invalid { border-color: #dc3545; }
 
+    /* ===== DETAIL ITEM dalam modal ===== */
     .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eef2ff; }
     .detail-item:last-child { border-bottom: none; }
     .detail-label { font-size: .8rem; color: #64748b; font-weight: 600; }
     .detail-value { font-size: .9rem; font-weight: 700; text-align: right; }
 
+    /* ===== PAGINATION ===== */
     .pagination .page-link { border-radius: 8px !important; margin: 0 2px; font-weight: 600; color: var(--primary); border: 2px solid #e2e8f0; font-size: .84rem; }
     .pagination .page-item.active .page-link { background: var(--primary); border-color: var(--primary); color: #fff; }
+
     footer { background: var(--dark); color: rgba(255,255,255,.55); font-size: .85rem; padding: 20px 0; text-align: center; margin-top: 40px; }
+    /* Toast di pojok kanan atas */
     .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9999; }
 
+    /* Grid pilihan parfum di modal edit */
     .parfum-grid-modal { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
     .parfum-opt-modal { border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 8px; }
     .parfum-opt-modal:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
@@ -66,6 +98,7 @@
 </head>
 <body>
 
+<!-- ===== NAVBAR ===== -->
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
@@ -86,6 +119,7 @@
   </div>
 </nav>
 
+<!-- ===== PAGE HEADER ===== -->
 <div class="page-header">
   <div class="container d-flex align-items-center justify-content-between flex-wrap gap-3">
     <div>
@@ -98,25 +132,30 @@
 
 <div class="container py-4">
 
+  <!-- ===== FILTER BAR: Pencarian dan filter data ===== -->
   <div class="row g-2 mb-3 align-items-center flex-wrap">
+    <!-- Kotak pencarian nama/no HP -->
     <div class="col-md-4 col-12">
       <div class="search-box">
         <i class="bi bi-search"></i>
         <input type="text" class="form-control" id="searchInput" placeholder="Cari nama / no HP..."/>
       </div>
     </div>
+    <!-- Filter status pesanan -->
     <div class="col-auto">
       <select class="form-select" id="filterStatus" style="border:2px solid #e2e8f0;border-radius:10px;font-size:.89rem">
         <option value="">Status: Semua</option>
         <option>Proses</option><option>Dicuci</option><option>Selesai</option><option>Diambil</option>
       </select>
     </div>
+    <!-- Filter paket -->
     <div class="col-auto">
       <select class="form-select" id="filterPaket" style="border:2px solid #e2e8f0;border-radius:10px;font-size:.89rem">
         <option value="">Paket: Semua</option>
         <option>Reguler</option><option>Express 1</option><option>Express 2</option>
       </select>
     </div>
+    <!-- Tombol hapus semua (muncul hanya jika ada data) -->
     <div class="col-auto ms-auto">
       <button class="btn btn-outline-danger rounded-3 fw-bold btn-sm px-3" id="btnHapusSemua" onclick="konfirmasiHapusSemua()" style="display:none">
         <i class="bi bi-trash me-1"></i>Hapus Semua
@@ -124,6 +163,7 @@
     </div>
   </div>
 
+  <!-- ===== TABEL DATA ===== -->
   <div class="table-card mb-3">
     <div class="table-responsive">
       <table class="table table-hover mb-0">
@@ -141,9 +181,11 @@
             <th class="text-center">Aksi</th>
           </tr>
         </thead>
+        <!-- Baris data diisi oleh renderTable() -->
         <tbody id="dataTable"></tbody>
       </table>
     </div>
+    <!-- Empty state saat tidak ada data -->
     <div id="emptyState" class="text-center py-5" style="display:none">
       <i class="bi bi-inbox display-3 text-muted opacity-40"></i>
       <p class="text-muted mt-3 fw-600">Belum ada data laundry</p>
@@ -151,11 +193,13 @@
     </div>
   </div>
 
+  <!-- Info jumlah data dan pagination -->
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
     <small class="text-muted fw-600" id="dataInfo">Total Data: 0</small>
     <nav><ul class="pagination mb-0" id="pagination"></ul></nav>
   </div>
 
+  <!-- ===== LEGEND STATUS ===== -->
   <div class="status-legend mt-4">
     <h6 class="fw-700 mb-3">Keterangan Status</h6>
     <div class="row g-3">
@@ -187,6 +231,7 @@
   </div>
 </div>
 
+<!-- ===== MODAL DETAIL: Menampilkan informasi lengkap pesanan ===== -->
 <div class="modal fade" id="modalDetail" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -194,6 +239,7 @@
         <h5 class="modal-title fw-700"><i class="bi bi-info-circle me-2"></i>Detail Pesanan</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
+      <!-- Konten detail diisi dinamis oleh lihatDetail() -->
       <div class="modal-body" id="detailBody"></div>
       <div class="modal-footer">
         <button class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Tutup</button>
@@ -202,6 +248,7 @@
   </div>
 </div>
 
+<!-- ===== MODAL EDIT: Form edit data pesanan ===== -->
 <div class="modal fade" id="modalEdit" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -210,6 +257,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <!-- Hidden field untuk menyimpan ID pesanan yang diedit -->
         <input type="hidden" id="editId"/>
         <div class="row g-3">
           <div class="col-md-6">
@@ -251,17 +299,19 @@
               <option>Proses</option><option>Dicuci</option><option>Selesai</option><option>Diambil</option>
             </select>
           </div>
+          <!-- Pilihan parfum dalam modal (grid 2 kolom) -->
           <div class="col-12">
             <label class="form-label">Pilihan Parfum</label>
             <div class="parfum-grid-modal">
               <label class="parfum-opt-modal"><input type="radio" name="editParfum" value=""/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Tanpa Parfum</div><div style="font-size:.73rem;color:#64748b">Gratis</div></div></label>
-              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Bunga (Floral)"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🌸 Bunga (Floral)</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
-              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lavender"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">💜 Lavender</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
-              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Fresh Cotton"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🌿 Fresh Cotton</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
-              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lemon Fresh"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">🍋 Lemon Fresh</div><div style="font-size:.73rem;color:#64748b">+Rp 4.000</div></div></label>
-              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Oud Premium"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">✨ Oud Premium</div><div style="font-size:.73rem;color:#64748b">+Rp 5.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Bunga (Floral)"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Bunga (Floral)</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lavender"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Lavender</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Fresh Cotton"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Fresh Cotton</div><div style="font-size:.73rem;color:#64748b">+Rp 3.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Lemon Fresh"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Lemon Fresh</div><div style="font-size:.73rem;color:#64748b">+Rp 4.000</div></div></label>
+              <label class="parfum-opt-modal"><input type="radio" name="editParfum" value="Oud Premium"/><div class="parfum-dot"></div><div><div style="font-size:.84rem;font-weight:700">Oud Premium</div><div style="font-size:.73rem;color:#64748b">+Rp 5.000</div></div></label>
             </div>
           </div>
+          <!-- Checkbox delivery -->
           <div class="col-12">
             <div class="form-check">
               <input class="form-check-input" type="checkbox" id="editDelivery" onchange="hitungEditTotal()"/>
@@ -274,6 +324,7 @@
             <label class="form-label">Alamat</label>
             <textarea class="form-control" id="editAlamat" rows="2"></textarea>
           </div>
+          <!-- Total harga modal edit -->
           <div class="col-12">
             <div class="p-3 rounded-3 text-white fw-700" style="background:linear-gradient(135deg,#0057ff,#001ea8)">
               Total: <span id="editTotalHarga">Rp 0</span>
@@ -289,6 +340,7 @@
   </div>
 </div>
 
+<!-- ===== MODAL HAPUS: Konfirmasi hapus satu data ===== -->
 <div class="modal fade" id="modalHapus" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content">
@@ -309,6 +361,7 @@
   </div>
 </div>
 
+<!-- Toast notifikasi untuk aksi CRUD -->
 <div class="toast-container">
   <div id="toastMsg" class="toast align-items-center border-0" role="alert">
     <div class="d-flex">
@@ -319,6 +372,232 @@
 </div>
 
 <footer><strong style="color:#5b9bff">My Laundry</strong></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+  /* ===== KONSTANTA & VARIABEL GLOBAL ===== */
+  const HARGA_PAKET = { 'Reguler': 7000, 'Express 1': 10000, 'Express 2': 12000 };
+  const HARGA_PARFUM = { '': 0, 'Bunga (Floral)': 3000, 'Lavender': 3000, 'Fresh Cotton': 3000, 'Lemon Fresh': 4000, 'Oud Premium': 5000 };
+  let hapusId = null;   // ID data yang akan dihapus (disimpan saat modal hapus dibuka)
+  let currentPage = 1;  // Halaman aktif pagination
+  const PER_PAGE = 8;   // Jumlah baris per halaman
+
+  /* ===== FUNGSI UTILITAS ===== */
+  // Membaca data dari localStorage
+  function getData() { return JSON.parse(localStorage.getItem('laundryData') || '[]'); }
+  // Menyimpan data ke localStorage
+  function saveData(d) { localStorage.setItem('laundryData', JSON.stringify(d)); }
+  // Format angka ke Rupiah
+  function fmt(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+  // Membuat HTML badge berwarna sesuai status
+  function badge(s) {
+    const m = { Proses:'proses', Selesai:'selesai', Diambil:'diambil', Dicuci:'dicuci' };
+    return `<span class="badge-status badge-${m[s]||'proses'}">${s}</span>`;
+  }
+  // Menampilkan toast notifikasi dengan tipe warna (success/danger)
+  function showToast(msg, type='success') {
+    const el = document.getElementById('toastMsg');
+    el.className = `toast align-items-center border-0 text-bg-${type}`;
+    document.getElementById('toastText').innerHTML = msg;
+    new bootstrap.Toast(el).show();
+  }
+
+  /*
+   * FUNGSI: renderTable()
+   * Mengambil data dari localStorage, menerapkan filter & search,
+   * lalu menampilkan baris tabel dengan pagination
+   */
+  function renderTable() {
+    const search = $('#searchInput').val().toLowerCase();
+    const sf = $('#filterStatus').val();
+    const pf = $('#filterPaket').val();
+    let data = getData();
+
+    // Terapkan filter pencarian
+    if (search) data = data.filter(d => d.nama.toLowerCase().includes(search) || d.noHp.includes(search));
+    if (sf) data = data.filter(d => d.status === sf);
+    if (pf) data = data.filter(d => d.paket === pf);
+
+    // Hitung pagination
+    const total = data.length;
+    const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+    if (currentPage > pages) currentPage = pages;
+    const start = (currentPage - 1) * PER_PAGE;
+    const pd = data.slice(start, start + PER_PAGE); // Data untuk halaman ini
+
+    $('#dataInfo').text(`Total Data: ${total}`);
+    $('#btnHapusSemua').toggle(getData().length > 0); // Tampilkan tombol hapus semua jika ada data
+
+    if (!total) {
+      $('#dataTable').html('');
+      $('#emptyState').show();
+      $('#pagination').html('');
+      return;
+    }
+    $('#emptyState').hide();
+
+    // Render baris tabel dengan tombol aksi Detail/Edit/Hapus
+    $('#dataTable').html(pd.map((d,i) => `
+      <tr>
+        <td class="ps-3">${start+i+1}</td>
+        <td><span class="fw-600">${d.nama}</span><br><small class="text-muted">${d.tanggal}</small></td>
+        <td class="text-muted">${d.noHp}</td>
+        <td><span class="badge bg-primary bg-opacity-10 text-primary fw-600" style="font-size:.73rem">${d.paket}</span></td>
+        <td>${d.berat} Kg</td>
+        <td style="font-size:.8rem">${d.parfum || '<span class="text-muted">—</span>'}</td>
+        <td>${d.delivery ? '<i class="bi bi-truck text-primary"></i>' : '<span class="text-muted">—</span>'}</td>
+        <td class="fw-700 text-primary">${fmt(d.total)}</td>
+        <td>${badge(d.status)}</td>
+        <td>
+          <div class="d-flex gap-1 justify-content-center flex-wrap">
+            <button class="btn btn-outline-info btn-action" onclick="lihatDetail(${d.id})"><i class="bi bi-eye"></i> Detail</button>
+            <button class="btn btn-outline-warning btn-action" onclick="bukaEdit(${d.id})"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="btn btn-outline-danger btn-action" onclick="konfirmasiHapus(${d.id})"><i class="bi bi-trash"></i> Hapus</button>
+          </div>
+        </td>
+      </tr>`).join(''));
+
+    // Render pagination links
+    let pagi = '';
+    if (pages > 1) {
+      pagi += `<li class="page-item ${currentPage===1?'disabled':''}"><a class="page-link" href="#" onclick="changePage(${currentPage-1});return false">&#8249;</a></li>`;
+      for (let p=1;p<=pages;p++) pagi += `<li class="page-item ${p===currentPage?'active':''}"><a class="page-link" href="#" onclick="changePage(${p});return false">${p}</a></li>`;
+      pagi += `<li class="page-item ${currentPage===pages?'disabled':''}"><a class="page-link" href="#" onclick="changePage(${currentPage+1});return false">&#8250;</a></li>`;
+    }
+    $('#pagination').html(pagi);
+  }
+
+  // Ganti halaman pagination
+  function changePage(p) { currentPage = p; renderTable(); }
+
+  /*
+   * FUNGSI: lihatDetail(id)
+   * Membuka modal dan mengisi konten detail berdasarkan ID pesanan
+   */
+  function lihatDetail(id) {
+    const d = getData().find(x => x.id === id);
+    if (!d) return;
+    $('#detailBody').html(`
+      <div class="detail-item"><span class="detail-label">Nama</span><span class="detail-value">${d.nama}</span></div>
+      <div class="detail-item"><span class="detail-label">No HP</span><span class="detail-value">${d.noHp}</span></div>
+      <div class="detail-item"><span class="detail-label">Email</span><span class="detail-value">${d.email||'—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Tanggal Masuk</span><span class="detail-value">${d.tanggal}</span></div>
+      <div class="detail-item"><span class="detail-label">Paket</span><span class="detail-value">${d.paket}</span></div>
+      <div class="detail-item"><span class="detail-label">Berat</span><span class="detail-value">${d.berat} Kg</span></div>
+      <div class="detail-item"><span class="detail-label">Parfum</span><span class="detail-value">${d.parfum||'Tanpa Parfum'}</span></div>
+      <div class="detail-item"><span class="detail-label">Delivery</span><span class="detail-value">${d.delivery?'Ya (+Rp 5.000)':'Tidak'}</span></div>
+      ${d.delivery && d.waktuJemput ? `<div class="detail-item"><span class="detail-label">Waktu Jemput</span><span class="detail-value">${d.waktuJemput}</span></div>` : ''}
+      ${d.catatanDriver ? `<div class="detail-item"><span class="detail-label">Catatan Driver</span><span class="detail-value">${d.catatanDriver}</span></div>` : ''}
+      <div class="detail-item"><span class="detail-label">Alamat</span><span class="detail-value">${d.alamat||'—'}</span></div>
+      <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value">${badge(d.status)}</span></div>
+      <div class="detail-item"><span class="detail-label">Total Harga</span><span class="detail-value text-primary" style="font-size:1.1rem">${fmt(d.total)}</span></div>`);
+    new bootstrap.Modal(document.getElementById('modalDetail')).show();
+  }
+
+  /*
+   * FUNGSI: bukaEdit(id)
+   * Mengisi form modal edit dengan data pesanan berdasarkan ID,
+   * lalu membuka modal edit
+   */
+  function bukaEdit(id) {
+    const d = getData().find(x => x.id === id);
+    if (!d) return;
+    $('#editId').val(d.id); $('#editNama').val(d.nama); $('#editNoHp').val(d.noHp);
+    $('#editEmail').val(d.email||''); $('#editTanggal').val(d.tanggal);
+    $('#editPaket').val(d.paket); $('#editBerat').val(d.berat);
+    $('#editStatus').val(d.status); $('#editDelivery').prop('checked', d.delivery||false);
+    $('#editAlamat').val(d.alamat||'');
+    $(`input[name="editParfum"][value="${d.parfum||''}"]`).prop('checked', true);
+    hitungEditTotal();
+    new bootstrap.Modal(document.getElementById('modalEdit')).show();
+  }
+
+  /*
+   * FUNGSI: hitungEditTotal()
+   * Menghitung ulang total harga di modal edit
+   */
+  function hitungEditTotal() {
+    const berat = parseFloat($('#editBerat').val()) || 0;
+    const paket = $('#editPaket').val() || 'Reguler';
+    const parfum = $('input[name="editParfum"]:checked').val() || '';
+    const delivery = $('#editDelivery').is(':checked');
+    const total = berat * (HARGA_PAKET[paket]||7000) + (HARGA_PARFUM[parfum]||0) + (delivery ? 5000 : 0);
+    $('#editTotalHarga').text(fmt(total));
+    return total;
+  }
+
+  /*
+   * FUNGSI: simpanEdit()
+   * Memvalidasi dan menyimpan perubahan data pesanan ke localStorage
+   */
+  function simpanEdit() {
+    let ok = true;
+    $('.form-control, .form-select', '#modalEdit').removeClass('is-invalid');
+    if (!$('#editNama').val().trim()) { $('#editNama').addClass('is-invalid'); ok = false; }
+    if ($('#editNoHp').val().replace(/\D/g,'').length < 10) { $('#editNoHp').addClass('is-invalid'); ok = false; }
+    const email = $('#editEmail').val().trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('#editEmail').addClass('is-invalid'); ok = false; }
+    if (!$('#editTanggal').val()) { $('#editTanggal').addClass('is-invalid'); ok = false; }
+    if (!parseFloat($('#editBerat').val()) || parseFloat($('#editBerat').val()) < 0.1) { $('#editBerat').addClass('is-invalid'); ok = false; }
+    if (!ok) return;
+
+    const data = getData();
+    const idx = data.findIndex(x => x.id == $('#editId').val()); // Cari index berdasarkan ID
+    if (idx === -1) return;
+    // Spread operator: update hanya field yang diubah, pertahankan field lain
+    data[idx] = { ...data[idx],
+      nama: $('#editNama').val().trim(), noHp: $('#editNoHp').val().trim(),
+      email: $('#editEmail').val().trim(), tanggal: $('#editTanggal').val(),
+      paket: $('#editPaket').val(), berat: parseFloat($('#editBerat').val()),
+      parfum: $('input[name="editParfum"]:checked').val() || '',
+      delivery: $('#editDelivery').is(':checked'),
+      status: $('#editStatus').val(), alamat: $('#editAlamat').val().trim(),
+      total: hitungEditTotal()
+    };
+    saveData(data);
+    bootstrap.Modal.getInstance(document.getElementById('modalEdit')).hide();
+    showToast('<i class="bi bi-check-circle me-2"></i>Data berhasil diperbarui!', 'success');
+    renderTable();
+  }
+
+  /*
+   * FUNGSI: konfirmasiHapus(id)
+   * Menyimpan ID yang akan dihapus dan membuka modal konfirmasi
+   */
+  function konfirmasiHapus(id) {
+    hapusId = id;
+    new bootstrap.Modal(document.getElementById('modalHapus')).show();
+  }
+
+  // Event listener tombol konfirmasi hapus satu data
+  document.getElementById('btnKonfirmasiHapus').addEventListener('click', function() {
+    if (!hapusId) return;
+    saveData(getData().filter(x => x.id !== hapusId)); // Hapus berdasarkan ID
+    hapusId = null;
+    bootstrap.Modal.getInstance(document.getElementById('modalHapus')).hide();
+    showToast('<i class="bi bi-trash me-2"></i>Data berhasil dihapus!', 'danger');
+    renderTable();
+  });
+
+  /*
+   * FUNGSI: konfirmasiHapusSemua()
+   * Menghapus seluruh data dari localStorage setelah konfirmasi browser
+   */
+  function konfirmasiHapusSemua() {
+    if (confirm('Yakin hapus semua data? Tindakan ini tidak dapat dibatalkan!')) {
+      localStorage.removeItem('laundryData');
+      showToast('<i class="bi bi-trash me-2"></i>Semua data telah dihapus!', 'danger');
+      renderTable();
+    }
+  }
+
+  // Event listener filter & search: re-render tabel setiap ada perubahan
+  $('#searchInput, #filterStatus, #filterPaket').on('input change', function() { currentPage = 1; renderTable(); });
+
+  // Panggil renderTable pertama kali saat halaman dimuat
+  renderTable();
+</script>
 
 </body>
 </html>
